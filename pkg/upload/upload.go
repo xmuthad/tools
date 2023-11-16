@@ -16,16 +16,24 @@ func UploadIt(uploader MavenUploader, localPath, repoURL, repoID string) (err er
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() && filepath.Ext(path) == ".jar" {
-			pomPath := strings.TrimSuffix(path, ".jar") + ".pom"
-			if _, err := os.Stat(pomPath); os.IsNotExist(err) {
-				fmt.Printf("POM file does not exist for %s, skipping\n", path)
-				return nil
-			}
-			fmt.Printf("Found JAR and POM: %s\n", path)
-			if err := uploader.Upload(path, pomPath, repoURL, repoID); err != nil {
-				fmt.Println(err)
-				// Continue on error
+		if !info.IsDir() {
+			if filepath.Ext(path) == ".jar" {
+				pomPath := strings.TrimSuffix(path, ".jar") + ".pom"
+				if _, err := os.Stat(pomPath); os.IsNotExist(err) {
+					fmt.Printf("POM file does not exist for %s, skipping\n", path)
+					return nil
+				}
+				fmt.Printf("Found JAR and POM: %s\n", path)
+				if err := uploader.Upload(path, pomPath, repoURL, repoID); err != nil {
+					fmt.Println(err)
+					// Continue on error
+				}
+			} else if filepath.Ext(path) == ".pom" {
+				fmt.Printf("Found POM: %s\n", path)
+				if err := uploader.Upload("", path, repoURL, repoID); err != nil {
+					fmt.Println(err)
+					// Continue on error
+				}
 			}
 		}
 		return nil

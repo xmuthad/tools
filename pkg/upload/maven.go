@@ -30,22 +30,35 @@ func (MvnUploadJars) Upload(jarPath, pomPath, repoURL, repoID string) error {
 	}
 
 	// 构建 Maven 命令
-	cmd := exec.Command("mvn", "deploy:deploy-file",
-		"-DgroupId="+project.GroupID,
-		"-DartifactId="+project.ArtifactID,
-		"-Dversion="+project.Version,
-		"-Dpackaging=jar",
-		"-Dfile="+jarPath,
-		"-DpomFile="+pomPath,
-		"-Durl="+repoURL,
-		"-DrepositoryId="+repoID,
-	)
+	var cmd *exec.Cmd
+	if jarPath != "" {
+		cmd = exec.Command("mvn", "deploy:deploy-file",
+			"-DgroupId="+project.GroupID,
+			"-DartifactId="+project.ArtifactID,
+			"-Dversion="+project.Version,
+			"-Dpackaging=jar",
+			"-Dfile="+jarPath,
+			"-DpomFile="+pomPath,
+			"-Durl="+repoURL,
+			"-DrepositoryId="+repoID,
+		)
+	} else if pomPath != "" {
+		cmd = exec.Command("mvn", "deploy:deploy-file",
+			"-DgroupId="+project.GroupID,
+			"-DartifactId="+project.ArtifactID,
+			"-Dversion="+project.Version,
+			"-Dpackaging=pom",
+			"-Dfile="+pomPath,
+			"-Durl="+repoURL,
+			"-DrepositoryId="+repoID,
+		)
+	}
 
 	// 执行 Maven 命令
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("failed to deploy %s: %w\nOutput: %s", jarPath, err, output)
+		return fmt.Errorf("failed to deploy %s: %w\nOutput: %s", jarPath+":"+pomPath, err, output)
 	}
-	fmt.Printf("Successfully deployed: %s\n", jarPath)
+	fmt.Printf("Successfully deployed: %s\n", jarPath+":"+pomPath)
 	return nil
 }
